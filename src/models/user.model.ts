@@ -1,4 +1,5 @@
 import { Schema, model, Model } from 'mongoose';
+import mongoosePaginate from 'mongoose-paginate';
 
 export interface UserInterface {
 	email: string,
@@ -25,5 +26,7 @@ export const UserSchema = new Schema<UserInterface>({
 		type: String,
 	}, 
 }, { timestamps: true });
+
+UserSchema.plugin(mongoosePaginate);
 
 export const User: Model<UserInterface> = model<UserInterface>('User', UserSchema);

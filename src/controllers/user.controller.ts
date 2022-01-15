@@ -1,43 +1,56 @@
-import { Request, Response } from "express"
+import { Request, Response, Router } from 'express';
 
+import { Controller } from '../server';
 import { User } from '../models/user.model';
-import { validateUserToPost } from "../validators/user.validator";
+import { ValidationException } from '../exceptions/http.exception';
+import UserValidator from '../validators/user.validator';
 
-export default class UserController {
-	static async index(req: Request, res: Response): Promise<Response> {
-		const users = await User.find(); 
+export default class UserController extends Controller {
+	public path: string = '/users';
+
+	public router = Router();
+
+	public initializeRoutes() {
+		this.router.get('/', this.index);
+		this.router.post('/', this.store);
+		this.router.get('/:id', this.get);
+		this.router.put('/:id', this.update);
+		this.router.delete('/:id', this.delete);
+	}
+
+	private async index(req: Request, res: Response): Promise<Response> {
+		const users = await User.find().skip(3).limit(3); 
 		return res.json(users);
 	}
 
-	static async store(req: Request, res: Response): Promise<Response> {
+	private async store(req: Request, res: Response): Promise<Response>  {
 		const { body } = req;
-		const user = new User(body);
-		const validation = validateUserToPost(user);
+		const user = new User(body);	
+		const validator = new UserValidator(user);
 
-		if (validation != null) {
-			return res.status(400).json({ message: validation })
-		}
+		validator.validateUserForSave();
 
 		const userExists = await User.findOne({ email: user.email });
 
 		if (userExists) {
-			return res.status(400).json({ message: "Email alreay exists." });
+			throw new ValidationException('Email alreay exists.', 400);
 		}
 		
 		await user.save();
+		
 		return res.json(user);
 	}
 
-	static async get(req: Request, res: Response ): Promise<Response> {
+	private async get(req: Request, res: Response ): Promise<Response> {
 
-		return res.json({"method": "get"});
+		return res.json({'method': 'get'});
 	}
 
-	static async update(req: Request, res: Response ): Promise<Response> {
-		return res.json({"method": "put"});
+	private async update(req: Request, res: Response ): Promise<Response> {
+		return res.json({'method': 'put'});
 	}
 
-	static async delete(req: Request, res: Response ): Promise<Response> {
-		return res.json({"method": "delete"});
+	private async delete(req: Request, res: Response ): Promise<Response> {
+		return res.json({'method': 'delete'});
 	}
 }
