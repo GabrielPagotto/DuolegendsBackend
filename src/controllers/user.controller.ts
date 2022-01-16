@@ -4,7 +4,6 @@ import { User } from "../models/user.model";
 import { Controller } from "../server";
 import { ValidationException } from "../exceptions/http.exception";
 import { generatePasswordHash } from "../utils/password.util";
-import UserValidator from "../validators/user.validator";
 
 export default class UserController extends Controller {
 	public path: string = "/users";
@@ -25,16 +24,18 @@ export default class UserController extends Controller {
 	private async store(req: Request, res: Response): Promise<Response>  {
 		const { body } = req;
 		const user = new User(body);	
-		const validator = new UserValidator(user);
-		validator.validateUserForSave();
-		const userExists = await User.findOne({ email: user.email });
-		if (!userExists) {
-			user.password = await generatePasswordHash(user.password);
-			await user.save();
-			return res.json(user);
-		} else {
+		if (user.email.length < 4 || !user.email.match("@")) {
+            throw new ValidationException("The email provided is invalid.");
+        }
+		if (user.password.length < 6) {
+            throw new ValidationException("The password must contain at least 8 digits.");
+        }
+		if (await User.findOne({ email: user.email })) {
 			throw new ValidationException("Email alreay exists.");
-		}
+		} 
+		user.password = await generatePasswordHash(user.password);
+		await user.save();
+		return res.json(user);
 	}
 
 	private async get(req: Request, res: Response ): Promise<Response> {
