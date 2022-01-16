@@ -3,7 +3,7 @@ export class ValidationException extends Error {
     
     public message: string;
 
-    public type: string = 'Validation';
+    public type: string = "Validation";
     
     constructor(message: string, status?: number) {
         super(message);

@@ -1,21 +1,22 @@
-import { Request, Response, Router } from 'express';
+import { Request, Response, Router } from "express";
 
-import { Controller } from '../server';
-import { User } from '../models/user.model';
-import { ValidationException } from '../exceptions/http.exception';
-import UserValidator from '../validators/user.validator';
+import { Controller } from "../server";
+import { User } from "../models/user.model";
+import { ValidationException } from "../exceptions/http.exception";
+import UserValidator from "../validators/user.validator";
+import { generatePasswordHash } from "../utils/password.util";
 
 export default class UserController extends Controller {
-	public path: string = '/users';
+	public path: string = "/users";
 
 	public router = Router();
 
 	public initializeRoutes() {
-		this.router.get('/', this.index);
-		this.router.post('/', this.store);
-		this.router.get('/:id', this.get);
-		this.router.put('/:id', this.update);
-		this.router.delete('/:id', this.delete);
+		this.router.get("/", this.index);
+		this.router.post("/", this.store);
+		this.router.get("/:id", this.get);
+		this.router.put("/:id", this.update);
+		this.router.delete("/:id", this.delete);
 	}
 
 	private async index(req: Request, res: Response): Promise<Response> {
@@ -33,8 +34,10 @@ export default class UserController extends Controller {
 		const userExists = await User.findOne({ email: user.email });
 
 		if (userExists) {
-			throw new ValidationException('Email alreay exists.', 400);
+			throw new ValidationException("Email alreay exists.");
 		}
+
+		user.password = await generatePasswordHash(user.password);
 		
 		await user.save();
 		
@@ -43,14 +46,14 @@ export default class UserController extends Controller {
 
 	private async get(req: Request, res: Response ): Promise<Response> {
 
-		return res.json({'method': 'get'});
+		return res.json({ "method": "get" });
 	}
 
 	private async update(req: Request, res: Response ): Promise<Response> {
-		return res.json({'method': 'put'});
+		return res.json({ "method": "put" });
 	}
 
 	private async delete(req: Request, res: Response ): Promise<Response> {
-		return res.json({'method': 'delete'});
+		return res.json({ "method": "delete" });
 	}
 }

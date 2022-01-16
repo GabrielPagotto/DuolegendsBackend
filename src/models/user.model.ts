@@ -1,5 +1,5 @@
-import { Schema, model, Model } from 'mongoose';
-import mongoosePaginate from 'mongoose-paginate';
+import { Schema, model, Model } from "mongoose";
+import mongoosePaginate from "mongoose-paginate";
 
 export interface UserInterface {
 	email: string,
@@ -29,4 +29,4 @@ export const UserSchema = new Schema<UserInterface>({
 
 UserSchema.plugin(mongoosePaginate);
 
-export const User: Model<UserInterface> = model<UserInterface>('User', UserSchema);
+export const User: Model<UserInterface> = model<UserInterface>("User", UserSchema);

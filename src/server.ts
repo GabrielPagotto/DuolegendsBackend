@@ -1,8 +1,8 @@
-import express from 'express';
-import dotenv from 'dotenv';
-import morgan from 'morgan';
-import mongoose from 'mongoose';
-import errorMiddleware from './middlewares/error.middleware';
+import express from "express";
+import dotenv from "dotenv";
+import morgan from "morgan";
+import mongoose from "mongoose";
+import errorMiddleware from "./middlewares/error.middleware";
 
 export abstract class Controller {
 	public abstract path: string;
@@ -20,7 +20,7 @@ class Server {
     constructor(controllers: Array<Controller>) {
         this.app = express();
         
-        require('express-async-errors');
+        require("express-async-errors");
 
         dotenv.config();
 
@@ -42,12 +42,13 @@ class Server {
         const mongooseUrlConnection = process.env.MONGODB_URL_CONNECTION;
 
         if (!mongooseUrlConnection) {
-            throw new Error('The connection url to mongodb was not informed in the environment variables. [MONGODB_URL_CONNECTION]');
+            throw new Error("The connection url to mongodb was not informed in the environment variables. [MONGODB_URL_CONNECTION]");
         }
+        
         mongoose.connect(mongooseUrlConnection).then(() => {
-            console.log('MongoDB database connected successfully');
+            console.log("MongoDB database connected successfully");
         }).catch((err) => {
-            console.log('Failed to connect to MongoDB database');
+            console.log("Failed to connect to MongoDB database");
             throw err;
         });
     }
@@ -69,7 +70,7 @@ class Server {
                 console.log(`The server is running on http://localhost:${this.port}`);
             });
         } else {
-            throw new Error('The server port was not informed in the environment variables. [SERVER_PORT]');
+            throw new Error("The server port was not informed in the environment variables. [SERVER_PORT]");
         }
     }
 }
