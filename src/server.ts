@@ -15,10 +15,10 @@ class Server {
     private port: number | undefined;
 
     constructor(controllers: Array<Controller>) {
-        this.app = express();
         require("express-async-errors");
         dotenv.config();
         this.port = Number(process.env.SERVER_PORT);
+        this.app = express();
         this.initializeMiddlewares();
         this.initializeMongoDbConnection();
         this.initializeControllers(controllers);
@@ -33,15 +33,16 @@ class Server {
 
     private initializeMongoDbConnection() {
         const mongooseUrlConnection = process.env.MONGODB_URL_CONNECTION;
-        if (!mongooseUrlConnection) {
+        if (mongooseUrlConnection) {
+            mongoose.connect(mongooseUrlConnection).then(() => {
+                console.log("MongoDB database connected successfully");
+            }).catch((err) => {
+                console.log("Failed to connect to MongoDB database");
+                throw err;
+            });
+        } else {
             throw new Error("The connection url to mongodb was not informed in the environment variables. [MONGODB_URL_CONNECTION]");
         }
-        mongoose.connect(mongooseUrlConnection).then(() => {
-            console.log("MongoDB database connected successfully");
-        }).catch((err) => {
-            console.log("Failed to connect to MongoDB database");
-            throw err;
-        });
     }
 
     private initializeControllers(controllers: Array<Controller>) {

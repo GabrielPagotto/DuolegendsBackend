@@ -1,10 +1,10 @@
 import { Request, Response, Router } from "express";
 
-import { Controller } from "../server";
 import { User } from "../models/user.model";
+import { Controller } from "../server";
 import { ValidationException } from "../exceptions/http.exception";
-import UserValidator from "../validators/user.validator";
 import { generatePasswordHash } from "../utils/password.util";
+import UserValidator from "../validators/user.validator";
 
 export default class UserController extends Controller {
 	public path: string = "/users";
@@ -28,7 +28,7 @@ export default class UserController extends Controller {
 		const validator = new UserValidator(user);
 		validator.validateUserForSave();
 		const userExists = await User.findOne({ email: user.email });
-		if (userExists) {
+		if (!userExists) {
 			user.password = await generatePasswordHash(user.password);
 			await user.save();
 			return res.json(user);
