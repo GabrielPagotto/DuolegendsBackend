@@ -9,3 +9,27 @@ export class ValidationException extends Error {
         this.message = message;
     }
 }
+
+export class NotFoundException extends Error {
+    public status: number;
+    public message: string;
+    public type: string = "Not Found";
+
+    constructor(message: string, status?: number) {
+        super(message);
+        this.message = message;
+        this.status = status ?? 404;
+    }
+}
+
+export class UnauthorizedException extends Error {
+    public status: number;
+    public message: string;
+    public type: string = "Unauthorized";
+
+    constructor(message: string = "Not authorized", status?: number) {
+        super(message);
+        this.message = message;
+        this.status = status ?? 400;
+    }
+}

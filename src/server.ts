@@ -3,11 +3,13 @@ import dotenv from "dotenv";
 import morgan from "morgan";
 import mongoose from "mongoose";
 import errorMiddleware from "./middlewares/error.middleware";
+import authMiddleware from "./middlewares/auth.middleware";
 
 export abstract class Controller {
 	public abstract path: string;
 	public abstract router: express.Router;
 	public abstract initializeRoutes(): void;
+    public authenticationRequired: boolean = true;
 }
 
 class Server {
@@ -48,7 +50,11 @@ class Server {
     private initializeControllers(controllers: Array<Controller>) {
         controllers.forEach((controller) => {
             controller.initializeRoutes();
-            this.app.use(controller.path, controller.router);
+            if (controller.authenticationRequired) {
+                this.app.use(controller.path, authMiddleware, controller.router);
+            } else {
+                this.app.use(controller.path, controller.router);
+            }
         });
     }
 

@@ -7,7 +7,7 @@ import { generatePasswordHash } from "../utils/password.util";
 
 export default class UserController extends Controller {
 	public path: string = "/users";
-	public router = Router();
+	public router: Router = Router();
 	public initializeRoutes() {
 		this.router.get("/", this.index);
 		this.router.post("/", this.store);
@@ -25,13 +25,13 @@ export default class UserController extends Controller {
 		const { body } = req;
 		const user = new User(body);	
 		if (user.email.length < 4 || !user.email.match("@")) {
-            throw new ValidationException("The email provided is invalid.");
+            throw new ValidationException("The email provided is invalid");
         }
 		if (user.password.length < 6) {
-            throw new ValidationException("The password must contain at least 8 digits.");
+            throw new ValidationException("The password must contain at least 8 digits");
         }
 		if (await User.findOne({ email: user.email })) {
-			throw new ValidationException("Email alreay exists.");
+			throw new ValidationException("Email alreay exists");
 		} 
 		user.password = await generatePasswordHash(user.password);
 		await user.save();
