@@ -5,7 +5,6 @@ function errorMiddleware(error: Error, req: Request, res: Response, next: NextFu
   if (error instanceof ValidationException) {
     const status = error.status;
     const message = error.message ?? "An unexpected error happened";
-
     return res.status(status).json({ status, message });
   } else {
     return next(error);

@@ -6,26 +6,19 @@ import errorMiddleware from "./middlewares/error.middleware";
 
 export abstract class Controller {
 	public abstract path: string;
-
 	public abstract router: express.Router;
-
 	public abstract initializeRoutes(): void;
 }
 
 class Server {
     private app: express.Application;
-
     private port: number | undefined;
 
     constructor(controllers: Array<Controller>) {
         this.app = express();
-        
         require("express-async-errors");
-
         dotenv.config();
-
         this.port = Number(process.env.SERVER_PORT);
-        
         this.initializeMiddlewares();
         this.initializeMongoDbConnection();
         this.initializeControllers(controllers);
@@ -40,11 +33,9 @@ class Server {
 
     private initializeMongoDbConnection() {
         const mongooseUrlConnection = process.env.MONGODB_URL_CONNECTION;
-
         if (!mongooseUrlConnection) {
             throw new Error("The connection url to mongodb was not informed in the environment variables. [MONGODB_URL_CONNECTION]");
         }
-        
         mongoose.connect(mongooseUrlConnection).then(() => {
             console.log("MongoDB database connected successfully");
         }).catch((err) => {

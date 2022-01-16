@@ -8,9 +8,7 @@ import { generatePasswordHash } from "../utils/password.util";
 
 export default class UserController extends Controller {
 	public path: string = "/users";
-
 	public router = Router();
-
 	public initializeRoutes() {
 		this.router.get("/", this.index);
 		this.router.post("/", this.store);
@@ -28,24 +26,18 @@ export default class UserController extends Controller {
 		const { body } = req;
 		const user = new User(body);	
 		const validator = new UserValidator(user);
-
 		validator.validateUserForSave();
-
 		const userExists = await User.findOne({ email: user.email });
-
 		if (userExists) {
+			user.password = await generatePasswordHash(user.password);
+			await user.save();
+			return res.json(user);
+		} else {
 			throw new ValidationException("Email alreay exists.");
 		}
-
-		user.password = await generatePasswordHash(user.password);
-		
-		await user.save();
-		
-		return res.json(user);
 	}
 
 	private async get(req: Request, res: Response ): Promise<Response> {
-
 		return res.json({ "method": "get" });
 	}
 
