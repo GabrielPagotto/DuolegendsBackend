@@ -4,6 +4,7 @@ import morgan from "morgan";
 import mongoose from "mongoose";
 import errorMiddleware from "./middlewares/error.middleware";
 import authMiddleware from "./middlewares/auth.middleware";
+import { initDatabase } from "./database/db.database";
 
 export abstract class Controller {
 	public abstract path: string;
@@ -22,6 +23,7 @@ class Server {
         this.port = Number(process.env.SERVER_PORT);
         this.app = express();
         this.initializeMiddlewares();
+        this.initializeDatabase();
         this.initializeMongoDbConnection();
         this.initializeControllers(controllers);
         this.initializeErrorMiddlewares();
@@ -31,6 +33,10 @@ class Server {
         this.app.use(express.json());
         this.app.use(express.urlencoded({ extended: true }));
         this.app.use(morgan("tiny"));
+    }
+
+    private initializeDatabase() {
+        initDatabase();
     }
 
     private initializeMongoDbConnection() {

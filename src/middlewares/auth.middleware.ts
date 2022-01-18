@@ -10,7 +10,7 @@ function authMiddleware(req: Request, res: Response, next: NextFunction) {
             throw new  UnauthorizedException("No token provided");
         } 
         const tokenSections = authorization!.split(" ");
-        if (tokenSections[0] !== "X-Duolegends-Token") {
+        if (tokenSections[0] !== "Bearer") {
             throw new  UnauthorizedException("Token prefix is ​​invalid");
         } else {
             const token: string = tokenSections[1];

@@ -2,7 +2,7 @@ import { Request, Response, Router } from "express";
 
 import { User } from "../models/user.model";
 import { Controller } from "../server";
-import { ValidationException } from "../exceptions/http.exception";
+import { NotFoundException, ValidationException } from "../exceptions/http.exception";
 import { generatePasswordHash } from "../utils/password.util";
 
 export default class UserController extends Controller {
@@ -12,12 +12,12 @@ export default class UserController extends Controller {
 		this.router.get("/", this.index);
 		this.router.post("/", this.store);
 		this.router.get("/:id", this.get);
-		this.router.put("/:id", this.update);
+		this.router.put("/", this.update);
 		this.router.delete("/:id", this.delete);
 	}
 
 	private async index(req: Request, res: Response): Promise<Response> {
-		const users = await User.find().skip(3).limit(3); 
+		const users = await User.find(); 
 		return res.json(users);
 	}
 
@@ -39,14 +39,43 @@ export default class UserController extends Controller {
 	}
 
 	private async get(req: Request, res: Response ): Promise<Response> {
-		return res.json({ "method": "get" });
+		const { id } = req.params;
+		const user = await User.findById(id);
+		if (user) {
+			return res.json(user); 
+		} else {
+			throw new NotFoundException("User not found");
+		}
 	}
 
 	private async update(req: Request, res: Response ): Promise<Response> {
-		return res.json({ "method": "put" });
+		const { id, userId } = req.params;
+		if (id === userId) {
+			const user = await User.findOne({ _id: id });
+			if (user) {
+				await user.delete();
+				return res.json(user);
+			} else {
+				throw new NotFoundException("User not found");
+			}
+		}  else {
+			throw new ValidationException("Function can be performed only by owner");
+		}
 	}
 
 	private async delete(req: Request, res: Response ): Promise<Response> {
-		return res.json({ "method": "delete" });
+		const { id, userId } = req.params;
+		console.log(req.params);
+		if (id === userId) {
+			const user = await User.findOne({ _id: id });
+			if (user) {
+				await user.delete();
+				return res.json(user);
+			} else {
+				throw new NotFoundException("User not found");
+			}
+		}  else {
+			throw new ValidationException("Function can be performed only by owner");
+		}
 	}
 }
