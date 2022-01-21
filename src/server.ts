@@ -1,10 +1,9 @@
 import express from "express";
 import dotenv from "dotenv";
 import morgan from "morgan";
-import mongoose from "mongoose";
 import errorMiddleware from "./middlewares/error.middleware";
 import authMiddleware from "./middlewares/auth.middleware";
-import { initDatabase } from "./database/db.database";
+import Database from "./database/db.database";
 
 export abstract class Controller {
 	public abstract path: string;
@@ -16,6 +15,7 @@ export abstract class Controller {
 class Server {
     private app: express.Application;
     private port: number | undefined;
+    private database!: Database;
 
     constructor(controllers: Array<Controller>) {
         require("express-async-errors");
@@ -24,7 +24,6 @@ class Server {
         this.app = express();
         this.initializeMiddlewares();
         this.initializeDatabase();
-        this.initializeMongoDbConnection();
         this.initializeControllers(controllers);
         this.initializeErrorMiddlewares();
     }
@@ -36,21 +35,7 @@ class Server {
     }
 
     private initializeDatabase() {
-        initDatabase();
-    }
-
-    private initializeMongoDbConnection() {
-        const mongooseUrlConnection = process.env.MONGODB_URL_CONNECTION;
-        if (mongooseUrlConnection) {
-            mongoose.connect(mongooseUrlConnection).then(() => {
-                console.log("MongoDB database connected successfully");
-            }).catch((err) => {
-                console.log("Failed to connect to MongoDB database");
-                throw err;
-            });
-        } else {
-            throw new Error("The connection url to mongodb was not informed in the environment variables. [MONGODB_URL_CONNECTION]");
-        }
+        this.database = new Database();
     }
 
     private initializeControllers(controllers: Array<Controller>) {

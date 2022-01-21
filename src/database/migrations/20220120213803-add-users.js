@@ -10,13 +10,20 @@ module.exports = {
 				allowNull: false,
 			},
 			email: {
-				type: Sequelize.STRING(120),
+				type: Sequelize.STRING(40),
 				allowNull: false,
 				unique: true,
 			},
 			password: {
 				type: Sequelize.STRING,
 				allowNull: false,
+			},
+			leagueoflegends_account_id: {
+				type: Sequelize.INTEGER,
+				references: {
+					model: { tableName: 'leagueoflegends_accounts' },
+					key: 'id',
+				},
 			},
 			verification_code: {
 				type: Sequelize.STRING,
@@ -33,10 +40,11 @@ module.exports = {
 				type: Sequelize.DATE,
 				allowNull: false,
 			},
-    	});
-  	},
+    	},
+	);
+  },
 
-  	down: async (queryInterface, Sequelize) => {
-    	await queryInterface.dropTable('users');
-  	}
+  down: async (queryInterface, Sequelize) => {
+    await queryInterface.dropTable('users');
+  }
 };

@@ -1,32 +1,68 @@
-import { Schema, model, Model } from "mongoose";
-import mongoosePaginate from "mongoose-paginate";
+import { DataTypes, Model, Sequelize  } from "sequelize";
+import { LeagueoflegendsAccount } from "./leagueoflegends_account";
 
-export interface UserInterface {
+
+export interface UserAttribute {
+	id: number,
 	email: string,
 	password: string,
-	isVerified: boolean,
+	verified: boolean,
 	verificationCode: string,
+	leagueoflegendsAccountId: number,
+	createdAt: Date,
+	updatedAt: Date,
 }
 
-export const UserSchema = new Schema<UserInterface>({
-	email: {
-		type: String,
-		required: true,
-	},
-	password: {
-		type: String,
-		required: true,
-	},
-	isVerified: {
-		type: Boolean,
-		default: false,
-		required: true,
-	},
-	verificationCode: {
-		type: String,
-	}, 
-}, { timestamps: true });
+export class User extends Model<UserAttribute> implements UserAttribute {
+	public id!: number;
+	public email!: string;
+	public password!: string;
+	public verified!: boolean;
+	public verificationCode!: string;
+	public leagueoflegendsAccountId!: number;
+	public readonly createdAt!: Date;
+	public readonly updatedAt!: Date;
 
-UserSchema.plugin(mongoosePaginate);
+	public static initialize(sequelize: Sequelize) {
+		User.init({
+			id: {
+				type: DataTypes.INTEGER,
+				autoIncrement: true,
+				primaryKey: true,
+			},
+			email: {
+				type: DataTypes.STRING,
+				unique: true,
+				allowNull: false,
+			},
+			password: {
+				type: DataTypes.STRING,
+				allowNull: false,
+			},
+			verified: {
+				type: DataTypes.BOOLEAN,
+				defaultValue: false,
+				allowNull: false,
+			},
+			verificationCode: {
+				type: DataTypes.STRING,
+				allowNull: true,
+			},
+			leagueoflegendsAccountId: {
+				type: DataTypes.INTEGER,
+			},
+			createdAt: {
+				type: DataTypes.DATE,
+				allowNull: false,
+				defaultValue: Date.now,
+			},
+			updatedAt: {
+				type: DataTypes.DATE,
+				allowNull: false,
+				defaultValue: Date.now,
+			}
+		}, { sequelize, tableName: "users" });
 
-export const User: Model<UserInterface> = model<UserInterface>("User", UserSchema);
+		User.belongsTo(LeagueoflegendsAccount, { foreignKey: "leagueoflegendsAccountId", as: "leagueoflegendsAccount" });
+	}
+}

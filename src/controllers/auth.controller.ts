@@ -19,14 +19,14 @@ export default class AuthController extends Controller {
 
     private async authenticate(req: Request, res: Response): Promise<Response> {
         const { email, password } = await req.body;
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ where: { email }});
         if (user) {
             if (await verifyPassword(password, user.password)) {
                 const secret = process.env.SECRET;
                 if (!secret) {
                     throw new Error("The secret key not informed in the environment variables. [SECRET]");
                 }
-                const token = jsonwebtoken.sign({ userId: user._id }, secret);
+                const token = jsonwebtoken.sign({ userId: user.id }, secret);
                 const data = {
                     auth: true,
                     token,
