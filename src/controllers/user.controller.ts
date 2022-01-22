@@ -1,10 +1,11 @@
 import { Request, Response, Router } from "express";
 
-import { User, UserAttribute } from "../models/user.model";
+import { User } from "../models/user.model";
 import { Controller } from "../server";
 import { NotFoundException, ValidationException } from "../exceptions/http.exception";
-import { generatePasswordHash } from "../utils/password.util";
+import passwordUtil from "../utils/password.util";
 import authMiddleware from "../middlewares/auth.middleware";
+import { UserInterface } from "../interfaces/models.interface";
 
 export default class UserController extends Controller {
 	public path: string = "/users";
@@ -25,7 +26,7 @@ export default class UserController extends Controller {
 
 	private async store(req: Request, res: Response): Promise<Response>  {
 		const { body } = req;
-		const user = body as UserAttribute;	
+		const user = body as UserInterface;	
 		if (user.email.length < 4 || !user.email.match("@")) {
 			throw new ValidationException("The email provided is invalid");
 		}
@@ -35,7 +36,7 @@ export default class UserController extends Controller {
 		if (await User.findOne({ where: { email: user.email }})) {
 			throw new ValidationException("Email alreay exists");
 		} 
-		user.password = await generatePasswordHash(user.password);
+		user.password = await passwordUtil.generatePasswordHash(user.password);
 		const createdUser = await User.create(user);
 		return res.json(createdUser);
 	}
@@ -70,8 +71,7 @@ export default class UserController extends Controller {
 
 	private async delete(req: Request, res: Response ): Promise<Response> {
 		const { id, userId } = req.params;
-		console.log(req.params);
-		if (id === userId) {
+		if (id === userId.toString()) {
 			const user = await User.findOne({ where: { id }});
 			if (user) {
 				await user.destroy();

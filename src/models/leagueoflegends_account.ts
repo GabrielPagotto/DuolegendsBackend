@@ -1,23 +1,16 @@
 import { DataTypes, Model, Sequelize  } from "sequelize";
+import { LeagueoflegendsAccountInterface, UserInterface } from "../interfaces/models.interface";
 import { LeagueoflegendsSummoner } from "./leagueoflegends_summoner";
+import { User } from "./user.model";
 
-export interface LeagueoflegendsAccountAttribute {
-	id: number | undefined,
-	accountPuuid: string,
-	accountGamename: string,
-	accountTagline: string,
-	leagueoflegendsSummonerId: number,
-	createdAt: Date | undefined,
-	updatedAt: Date | undefined,
-}
-
-
-export class LeagueoflegendsAccount extends Model<LeagueoflegendsAccountAttribute> implements LeagueoflegendsAccountAttribute {
+export class LeagueoflegendsAccount extends Model<LeagueoflegendsAccountInterface> implements LeagueoflegendsAccountInterface {
 	public id!: number;
 	public accountPuuid!: string;
 	public accountGamename!: string;
 	public accountTagline!: string;
 	public leagueoflegendsSummonerId!: number;
+	public leagueoflegendsSummoner!: LeagueoflegendsSummoner;
+	public user: UserInterface | undefined;
 	public readonly createdAt!: Date;
 	public readonly updatedAt!: Date;
 
@@ -51,7 +44,10 @@ export class LeagueoflegendsAccount extends Model<LeagueoflegendsAccountAttribut
 				defaultValue: Date.now,
 			}
 		}, { sequelize, tableName: "leagueoflegends_accounts" });
-
-		LeagueoflegendsAccount.belongsTo(LeagueoflegendsSummoner, { foreignKey: "leagueoflegendsSummonerId", as: "leagueoflegendsSummoner" });
 	}	
+
+	public static initializeAssossiations() {
+		LeagueoflegendsAccount.belongsTo(LeagueoflegendsSummoner, { foreignKey: "leagueoflegendsSummonerId", as: "leagueoflegendsSummoner" });
+		LeagueoflegendsAccount.hasOne(User, { foreignKey: "leagueoflegendsAccountId", as: "user" });
+	}
 }

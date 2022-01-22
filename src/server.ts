@@ -9,7 +9,6 @@ export abstract class Controller {
 	public abstract path: string;
 	public abstract router: express.Router;
 	public abstract initializeRoutes(): void;
-    public authenticationRequired: boolean = true;
 }
 
 class Server {
@@ -41,11 +40,7 @@ class Server {
     private initializeControllers(controllers: Array<Controller>) {
         controllers.forEach((controller) => {
             controller.initializeRoutes();
-            if (controller.authenticationRequired) {
-                this.app.use(controller.path, authMiddleware, controller.router);
-            } else {
-                this.app.use(controller.path, controller.router);
-            }
+            this.app.use(controller.path, controller.router);
         });
     }
 

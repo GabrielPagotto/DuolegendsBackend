@@ -1,4 +1,4 @@
-import jsonwebtoken, { TokenExpiredError } from "jsonwebtoken";
+import jsonwebtoken, { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
 import { NextFunction, Request, Response } from "express";
 import { UnauthorizedException } from "../exceptions/http.exception";
 import errorMiddleware from "./error.middleware";
@@ -11,7 +11,7 @@ function authMiddleware(req: Request, res: Response, next: NextFunction) {
         } 
         const tokenSections = authorization!.split(" ");
         if (tokenSections[0] !== "Bearer") {
-            throw new  UnauthorizedException("Token prefix is ​​invalid");
+            throw new  UnauthorizedException("Token prefix is invalid");
         } else {
             const token: string = tokenSections[1];
             const secret = process.env.SECRET;
@@ -23,12 +23,18 @@ function authMiddleware(req: Request, res: Response, next: NextFunction) {
             }
             try {
                 const decoded = jsonwebtoken.verify(token, secret);
-                const { userId } = decoded.userId;
+                const { userId } = decoded;
                 req.params.userId = userId;
                 next();
             } catch (err) {
                 if (err instanceof TokenExpiredError) {
                     throw new UnauthorizedException("The token has expired");
+                } else if (err instanceof JsonWebTokenError) {
+                    if (err.message === 'invalid signature') {
+                        throw new UnauthorizedException();
+                    } else {
+                        throw err;
+                    }
                 } else {
                     throw err;
                 }

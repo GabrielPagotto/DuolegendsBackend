@@ -1,25 +1,14 @@
 import { DataTypes, Model, Sequelize  } from "sequelize";
+import { UserInterface } from "../interfaces/models.interface";
 import { LeagueoflegendsAccount } from "./leagueoflegends_account";
 
-
-export interface UserAttribute {
-	id: number,
-	email: string,
-	password: string,
-	verified: boolean,
-	verificationCode: string,
-	leagueoflegendsAccountId: number,
-	createdAt: Date,
-	updatedAt: Date,
-}
-
-export class User extends Model<UserAttribute> implements UserAttribute {
+export class User extends Model<UserInterface> implements UserInterface {
 	public id!: number;
 	public email!: string;
 	public password!: string;
-	public verified!: boolean;
-	public verificationCode!: string;
-	public leagueoflegendsAccountId!: number;
+	public leagueoflegendsVerified!: boolean;
+	public leagueoflegendsVerificationCode!: string;
+	public leagueoflegendsAccountId: number | undefined;
 	public readonly createdAt!: Date;
 	public readonly updatedAt!: Date;
 
@@ -39,12 +28,12 @@ export class User extends Model<UserAttribute> implements UserAttribute {
 				type: DataTypes.STRING,
 				allowNull: false,
 			},
-			verified: {
+			leagueoflegendsVerified: {
 				type: DataTypes.BOOLEAN,
 				defaultValue: false,
 				allowNull: false,
 			},
-			verificationCode: {
+			leagueoflegendsVerificationCode: {
 				type: DataTypes.STRING,
 				allowNull: true,
 			},
@@ -62,7 +51,9 @@ export class User extends Model<UserAttribute> implements UserAttribute {
 				defaultValue: Date.now,
 			}
 		}, { sequelize, tableName: "users" });
+	}
 
+	public static initializeAssossiations() {
 		User.belongsTo(LeagueoflegendsAccount, { foreignKey: "leagueoflegendsAccountId", as: "leagueoflegendsAccount" });
 	}
 }

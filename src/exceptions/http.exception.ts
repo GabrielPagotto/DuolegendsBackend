@@ -33,3 +33,15 @@ export class UnauthorizedException extends Error {
         this.status = status ?? 400;
     }
 }
+
+export class NotAcceptable extends Error {
+    public status: number;
+    public message: string;
+    public type: string = "Not Acceptable";
+
+    constructor(message: string = "Not Acceptable", status?: number) {
+        super(message);
+        this.message = message;
+        this.status = status ?? 406;
+    }
+}

@@ -25,12 +25,12 @@ module.exports = {
 					key: 'id',
 				},
 			},
-			verification_code: {
-				type: Sequelize.STRING,
-			},
-			verified: {
+			leagueoflegends_verified: {
 				type: Sequelize.BOOLEAN,
 				defaultValue: false,
+			},
+			leagueoflegends_verification_code: {
+				type: Sequelize.STRING,
 			},
 			created_at: {
 				type: Sequelize.DATE,

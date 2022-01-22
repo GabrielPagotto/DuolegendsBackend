@@ -1,20 +1,8 @@
 import { DataTypes, Model, Sequelize  } from "sequelize";
+import { LeagueoflegendsSumonnerInterface } from "../interfaces/models.interface";
+import { LeagueoflegendsAccount } from "./leagueoflegends_account";
 
-export interface LeagueoflegendsSumonnerAttribute {
-	id: number | undefined,
-	summonerId: string,
-	summonerAccountid: string,
-	summonerPuuid: string,
-	summonerName: string,
-    summonerProfileiconid: number,
-    summonerRevisiondate: number,
-    summonerSummonerlevel: number,
-	createdAt: Date | undefined,
-	updatedAt: Date | undefined,
-}
-
-
-export class LeagueoflegendsSummoner extends Model<LeagueoflegendsSumonnerAttribute> implements LeagueoflegendsSumonnerAttribute {
+export class LeagueoflegendsSummoner extends Model<LeagueoflegendsSumonnerInterface> implements LeagueoflegendsSumonnerInterface {
 	public id!: number;
 	public summonerId!: string;
 	public summonerAccountid!: string;
@@ -64,6 +52,10 @@ export class LeagueoflegendsSummoner extends Model<LeagueoflegendsSumonnerAttrib
                 allowNull: false,
                 defaultValue: Date.now,
             }
-        }, { sequelize, tableName: 'leagueoflegends_summoners' });
+        }, { sequelize, tableName: "leagueoflegends_summoners" });
+    }
+
+    public static initializeAssossiations() {
+        LeagueoflegendsSummoner.hasOne(LeagueoflegendsAccount, { foreignKey: "leagueoflegendsSummonerId", as: "leagueoflegendsAccount" });
     }
 }

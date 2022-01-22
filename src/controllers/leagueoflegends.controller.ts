@@ -1,50 +1,20 @@
 import { Request, Response, Router } from "express";
 import { Controller } from "../server";
-import axios from "axios";
-import { NotFoundException, ValidationException } from "../exceptions/http.exception";
-import { ACCEPTED_TAGLINES, REGION_HOST_AMERICA } from "../constants/leagueoflegends.constants";
-import { getLeagueOfLegendsHost as getLeagueOfLegendsHostByTagLine } from "../utils/leagueoflegends.utils";
-import { LeagueoflegendsSummoner, LeagueoflegendsSumonnerAttribute } from "../models/leagueoflegends_summoner";
-import { LeagueoflegendsAccount, LeagueoflegendsAccountAttribute } from "../models/leagueoflegends_account";
+import { NotAcceptable, NotFoundException, ValidationException } from "../exceptions/http.exception";
+import { LeagueoflegendsSummoner } from "../models/leagueoflegends_summoner";
+import { LeagueoflegendsAccount } from "../models/leagueoflegends_account";
 import { User } from "../models/user.model";
-
-interface SummonerByNameInterface {
-    id: string;
-    accountId: string;
-    puuid: string;
-    name: string;
-    profileIconId: number;
-    revisionDate: number;
-    summonerLevel: number;
-}
-
-interface AccountByPuuidInterface {
-    puuid: string;
-    gameName: string;
-    tagLine: string;
-}
-
-interface LeagueoflegendsErrorInterface {
-    status: {
-        message: string,
-        "status_code": number,
-    }
-}
+import leagueoflegendsUtil from "../utils/leagueoflegends.util";
+import authMiddleware from "../middlewares/auth.middleware";
+import { LeagueoflegendsAccountInterface, LeagueoflegendsSumonnerInterface, UserInterface } from "../interfaces/models.interface";
 
 export default class LeagueoflegendsController extends Controller {
     public path: string = "/leagueoflegends";
     public router: Router = Router();
     public initializeRoutes(): void {
-        this.router.put('/set-account-by-summoner-name', this.setAccountBySummonerName);
+        this.router.put('/set-account-by-summoner-name', authMiddleware, this.setAccountBySummonerName);
     }
-
-    private static getRiotApiKey(): string {
-        const riotApiKey = process.env.RIOT_API_KEY;
-        if (!riotApiKey) {
-            throw new Error("The riot api key was not informed in the environment variables. [RIOT_API_KEY]");
-        }
-        return riotApiKey;
-    }
+    public authenticationRequired: boolean = true;
 
     private async setAccountBySummonerName(req: Request, res: Response): Promise<Response> {
         let { summonerName, tagLine } = req.query;
@@ -53,62 +23,43 @@ export default class LeagueoflegendsController extends Controller {
         } else if (!tagLine) {
             throw new ValidationException("Enter the tag line parameter");            
         } else {
-            if (ACCEPTED_TAGLINES.includes(tagLine as string)) {
-                const urlSummoner = getLeagueOfLegendsHostByTagLine(tagLine as string) + `/lol/summoner/v4/summoners/by-name/${summonerName}`;
-                const key = LeagueoflegendsController.getRiotApiKey();
-                const headers = { "X-Riot-Token": key };
-                const resSummoner = await axios.get(urlSummoner, { validateStatus: status => true, headers });
-                if (resSummoner.status === 404) {
-                    throw new NotFoundException("Summoner not found");
-                } else {
-                    try {
-                        const summonerProps: SummonerByNameInterface = resSummoner.data;
-                        const urlAccount = REGION_HOST_AMERICA + `/riot/account/v1/accounts/by-puuid/${summonerProps.puuid}`;
-                        const resAccount = await axios.get(urlAccount, { validateStatus: status => true, headers });
-                        if (resAccount.status !== 200) {
-                            const resErr: LeagueoflegendsErrorInterface = resAccount.data;
-                            throw new ValidationException(resErr.status.message);
-                        } else {
-                            const summonerAttr: LeagueoflegendsSumonnerAttribute = {
-                                id: undefined,
-                                summonerId: summonerProps.id,
-                                summonerAccountid: summonerProps.accountId,
-                                summonerPuuid: summonerProps.puuid,
-                                summonerName: summonerProps.name,
-                                summonerProfileiconid: summonerProps.profileIconId,
-                                summonerRevisiondate: summonerProps.revisionDate,
-                                summonerSummonerlevel: summonerProps.summonerLevel,
-                                createdAt: undefined,
-                                updatedAt: undefined,
-                            };
-                            const leagueoflegendsSummoner = await LeagueoflegendsSummoner.create(summonerAttr);
-                            const accountProps: AccountByPuuidInterface = resAccount.data;
-                            const accountAttr: LeagueoflegendsAccountAttribute = {
-                                id: undefined,
-                                accountPuuid: accountProps.puuid,
-                                accountGamename: accountProps.gameName,
-                                accountTagline: accountProps.tagLine,
-                                leagueoflegendsSummonerId: leagueoflegendsSummoner.id,
-                                createdAt: undefined,
-                                updatedAt: undefined,
-                            }
-                            const leagueoflegendsAccount = await LeagueoflegendsAccount.create(accountAttr);
-                            const user = await User.findByPk(1);
-                            if (!user) {
-                                throw new NotFoundException("User not found");
-                            }
-                            user.leagueoflegendsAccountId = leagueoflegendsAccount.id;
-                            await user.save();
-                            return res.json({ ...leagueoflegendsAccount, leagueoflegendsSummoner: leagueoflegendsSummoner });
-                        }
-                    } catch (err) {
-                        console.log(err);
-                        return res.json();
-                    } 
+            const summonerAttr = await leagueoflegendsUtil.getSummonerByName(summonerName as string, tagLine as string);
+            const data = await LeagueoflegendsSummoner.findOne({ where: { summonerId: summonerAttr.summonerId }, include: [
+                { association: 'leagueoflegendsAccount', include: [{ association: 'user' }]},
+            ]});
+            const { userId } = req.params;
+            const summoner: LeagueoflegendsSumonnerInterface & {
+                leagueoflegendsAccount: LeagueoflegendsAccountInterface  & { user: UserInterface  },
+            } = data?.toJSON() as LeagueoflegendsSumonnerInterface & { leagueoflegendsAccount: LeagueoflegendsAccountInterface  & { user: UserInterface  }};
+            if (summoner) {
+                if (summoner.leagueoflegendsAccount.user.id !== Number(userId.toString()) && summoner.leagueoflegendsAccount.user.leagueoflegendsVerified) {
+                    throw new NotAcceptable("Summoner name belongs to another user");
                 }
-            } else {
-                throw new ValidationException("Enter a valid tag line parameter");            
             }
+            const user = await User.findByPk(userId);
+            if (!user) {
+                throw new NotFoundException("User not found");
+            }
+            if (user.leagueoflegendsAccountId) {
+                const leagueoflegendsAccount = await LeagueoflegendsAccount.findByPk(user.leagueoflegendsAccountId);
+                await user.update({ leagueoflegendsAccountId: null, leagueoflegendsVerified: false });
+                if (leagueoflegendsAccount) {
+                    if (leagueoflegendsAccount.leagueoflegendsSummonerId) {
+                        const leagueoflegendsSummoner = await LeagueoflegendsSummoner.findByPk(leagueoflegendsAccount.leagueoflegendsSummonerId);
+                        await leagueoflegendsAccount?.destroy();
+                        await leagueoflegendsSummoner?.destroy();
+                    }
+                }
+            }
+            const accountAttr = await leagueoflegendsUtil.getAccountByPuuid(summonerAttr.summonerPuuid);
+            const leagueoflegendsSummoner = await LeagueoflegendsSummoner.create(summonerAttr);
+            accountAttr.leagueoflegendsSummonerId = leagueoflegendsSummoner.id;
+            const leagueoflegendsAccount: LeagueoflegendsAccount = await LeagueoflegendsAccount.create(accountAttr);
+            user.leagueoflegendsAccountId = leagueoflegendsAccount.id;
+            await user.save();
+            const resData: LeagueoflegendsAccountInterface & { leagueoflegendsSummoner: LeagueoflegendsSumonnerInterface } = leagueoflegendsAccount.toJSON();
+            resData.leagueoflegendsSummoner = leagueoflegendsSummoner;
+            return res.json(resData);
         }
     }
 }

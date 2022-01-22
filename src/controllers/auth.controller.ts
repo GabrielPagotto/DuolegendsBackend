@@ -4,14 +4,12 @@ import { Router, Request, Response } from "express";
 import { NotFoundException, UnauthorizedException } from "../exceptions/http.exception";
 import { User } from "../models/user.model";
 import { Controller } from "../server";
-import { verifyPassword } from "../utils/password.util";
+import passwordUtil from "../utils/password.util";
 
 export default class AuthController extends Controller {
     public path: string = "/auth";
 
     public router: Router = Router();
-
-    authenticationRequired: boolean = false;
 
     public initializeRoutes(): void {
         this.router.post("/", this.authenticate);
@@ -21,7 +19,7 @@ export default class AuthController extends Controller {
         const { email, password } = await req.body;
         const user = await User.findOne({ where: { email }});
         if (user) {
-            if (await verifyPassword(password, user.password)) {
+            if (await passwordUtil.verifyPassword(password, user.password)) {
                 const secret = process.env.SECRET;
                 if (!secret) {
                     throw new Error("The secret key not informed in the environment variables. [SECRET]");

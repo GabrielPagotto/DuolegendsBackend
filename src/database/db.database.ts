@@ -30,9 +30,7 @@ export default class Database {
         this.connection = new Sequelize(dbConfig);
         this.connection.authenticate().then(() => {
             console.log("Connection to the database was successful");
-        }).catch(err => {
-            console.log("Failed to connect to the database");
-        });
+        }).catch(err => console.log("Failed to connect to the database"));
         this.initializeModels();
     }
 
@@ -40,5 +38,9 @@ export default class Database {
         LeagueoflegendsSummoner.initialize(this.connection);
         LeagueoflegendsAccount.initialize(this.connection);
         User.initialize(this.connection);
+
+        LeagueoflegendsSummoner.initializeAssossiations();
+        LeagueoflegendsAccount.initializeAssossiations();
+        User.initializeAssossiations();
     }   
 }

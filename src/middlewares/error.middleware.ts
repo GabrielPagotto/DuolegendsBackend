@@ -1,11 +1,12 @@
 import { NextFunction, Request, Response } from "express";
-import { NotFoundException, UnauthorizedException, ValidationException } from "../exceptions/http.exception";
+import { NotAcceptable, NotFoundException, UnauthorizedException, ValidationException } from "../exceptions/http.exception";
  
 function errorMiddleware(error: Error, req: Request, res: Response, next: NextFunction): Response | void {
   const arrayOfAcceptedTypes = [
     ValidationException,
     NotFoundException,
     UnauthorizedException,
+    NotAcceptable,
   ];
   let type, status, message = "An unexpected error happened";
   arrayOfAcceptedTypes.forEach((errorType) => {
