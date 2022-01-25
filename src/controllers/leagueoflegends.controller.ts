@@ -19,9 +19,9 @@ export default class LeagueoflegendsController extends Controller {
     private async setAccountBySummonerName(req: Request, res: Response): Promise<Response> {
         let { summonerName, tagLine } = req.query;
         if (!summonerName) {
-            throw new ValidationException("Summoner name not provided");
+            throw new ValidationException("summoner-name-not-provided");
         } else if (!tagLine) {
-            throw new ValidationException("Enter the tag line parameter");            
+            throw new ValidationException("tag-line-not-provided");            
         } else {
             const summonerAttr = await leagueoflegendsUtil.getSummonerByName(summonerName as string, tagLine as string);
             const data = await LeagueoflegendsSummoner.findOne({ where: { summonerId: summonerAttr.summonerId }, include: [
@@ -33,12 +33,12 @@ export default class LeagueoflegendsController extends Controller {
             } = data?.toJSON() as LeagueoflegendsSumonnerInterface & { leagueoflegendsAccount: LeagueoflegendsAccountInterface  & { user: UserInterface  }};
             if (summoner) {
                 if (summoner.leagueoflegendsAccount.user.id !== Number(userId.toString()) && summoner.leagueoflegendsAccount.user.leagueoflegendsVerified) {
-                    throw new NotAcceptable("Summoner name belongs to another user");
+                    throw new NotAcceptable("summoner-has-user");
                 }
             }
             const user = await User.findByPk(userId);
             if (!user) {
-                throw new NotFoundException("User not found");
+                throw new NotFoundException("user-not-found");
             }
             if (user.leagueoflegendsAccountId) {
                 const leagueoflegendsAccount = await LeagueoflegendsAccount.findByPk(user.leagueoflegendsAccountId);

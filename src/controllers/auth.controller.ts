@@ -31,10 +31,10 @@ export default class AuthController extends Controller {
                 }; 
                 return res.json(data);    
             } else {
-                throw new UnauthorizedException();
+                throw new UnauthorizedException('wrong-password');
             }
         } else {
-            throw new NotFoundException("User not found");
+            throw new NotFoundException("user-not-found");
         }
     }
 }

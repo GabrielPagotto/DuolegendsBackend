@@ -28,17 +28,17 @@ export default class UserController extends Controller {
 		const { body } = req;
 		const user = body as UserInterface;	
 		if (user.email.length < 4 || !user.email.match("@")) {
-			throw new ValidationException("The email provided is invalid");
+			throw new ValidationException("invalid-email");
 		}
 		if (user.password.length < 6) {
-			throw new ValidationException("The password must contain at least 8 digits");
+			throw new ValidationException("invalid-password");
 		}
 		if (await User.findOne({ where: { email: user.email }})) {
-			throw new ValidationException("Email alreay exists");
+			throw new ValidationException("email-already-in-use");
 		} 
 		user.password = await passwordUtil.generatePasswordHash(user.password);
 		const createdUser = await User.create(user);
-		return res.json(createdUser);
+		return res.status(201).json(createdUser);
 	}
 
 	private async get(req: Request, res: Response ): Promise<Response> {
@@ -50,7 +50,7 @@ export default class UserController extends Controller {
 		if (user) {
 			return res.json(user); 
 		} else {
-			throw new NotFoundException("User not found");
+			throw new NotFoundException("user-not-found");
 		}
 	}
 
@@ -62,10 +62,10 @@ export default class UserController extends Controller {
 				await user.destroy();
 				return res.json(user);
 			} else {
-				throw new NotFoundException("User not found");
+				throw new NotFoundException("user-not-found");
 			}
 		}  else {
-			throw new ValidationException("Function can be performed only by owner");
+			throw new ValidationException("only-perform-by-owner");
 		}
 	}
 
@@ -77,10 +77,10 @@ export default class UserController extends Controller {
 				await user.destroy();
 				return res.json(user);
 			} else {
-				throw new NotFoundException("User not found");
+				throw new NotFoundException("user-not-found");
 			}
 		}  else {
-			throw new ValidationException("Function can be performed only by owner");
+			throw new ValidationException("only-perform-by-owner");
 		}
 	}
 }
