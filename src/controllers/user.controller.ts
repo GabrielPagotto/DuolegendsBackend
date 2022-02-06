@@ -26,18 +26,23 @@ export default class UserController extends Controller {
 
 	private async store(req: Request, res: Response): Promise<Response>  {
 		const { body } = req;
-		const user = body as UserInterface;	
+		const user = body as UserInterface;
+
 		if (user.email.length < 4 || !user.email.match("@")) {
 			throw new ValidationException("invalid-email");
 		}
+
 		if (user.password.length < 6) {
 			throw new ValidationException("invalid-password");
 		}
+
 		if (await User.findOne({ where: { email: user.email }})) {
 			throw new ValidationException("email-already-in-use");
 		} 
+
 		user.password = await passwordUtil.generatePasswordHash(user.password);
 		const createdUser = await User.create(user);
+
 		return res.status(201).json(createdUser);
 	}
 
@@ -47,40 +52,46 @@ export default class UserController extends Controller {
 			association: "leagueoflegendsAccount",
 			include: [{ association: "leagueoflegendsSummoner" }],
 		}});
-		if (user) {
-			return res.json(user); 
-		} else {
+
+		if (!user) {
 			throw new NotFoundException("user-not-found");
-		}
+		} 
+
+		return res.json(user); 
 	}
 
 	private async update(req: Request, res: Response ): Promise<Response> {
 		const { id, userId } = req.params;
-		if (id === userId) {
-			const user = await User.findOne({ where: { id: id }});
-			if (user) {
-				await user.destroy();
-				return res.json(user);
-			} else {
-				throw new NotFoundException("user-not-found");
-			}
-		}  else {
+
+		if (id !== userId) {
 			throw new ValidationException("only-perform-by-owner");
 		}
+
+		const user = await User.findOne({ where: { id: id }});
+
+		if (!user) {
+			throw new NotFoundException("user-not-found");
+		}
+
+		await user.destroy();
+		return res.json(user);
 	}
 
 	private async delete(req: Request, res: Response ): Promise<Response> {
 		const { id, userId } = req.params;
-		if (id === userId.toString()) {
-			const user = await User.findOne({ where: { id }});
-			if (user) {
-				await user.destroy();
-				return res.json(user);
-			} else {
-				throw new NotFoundException("user-not-found");
-			}
-		}  else {
+
+		if (id !== userId.toString()) {
 			throw new ValidationException("only-perform-by-owner");
 		}
+
+		const user = await User.findOne({ where: { id }});
+
+		if (!user) {
+			throw new NotFoundException("user-not-found");
+
+		}
+
+		await user.destroy();
+		return res.json(user);
 	}
 }

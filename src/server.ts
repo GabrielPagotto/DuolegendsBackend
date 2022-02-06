@@ -17,7 +17,9 @@ class Server {
 
     constructor(controllers: Array<Controller>) {
         require("express-async-errors");
+
         dotenv.config();
+
         this.port = Number(process.env.SERVER_PORT);
         this.app = express();
         this.initializeMiddlewares();
@@ -48,13 +50,13 @@ class Server {
     }
 
     public listen() {
-        if (this.port) {
-            this.app.listen(this.port, () => {
-                console.log(`The server is running on http://localhost:${this.port}`);
-            });
-        } else {
+        if (!this.port) {
             throw new Error("The server port was not informed in the environment variables. [SERVER_PORT]");
         }
+
+        this.app.listen(this.port, () => {
+            console.log(`The server is running on http://localhost:${this.port}`);
+        });
     }
 }
 

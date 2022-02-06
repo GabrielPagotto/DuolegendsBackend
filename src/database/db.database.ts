@@ -16,17 +16,28 @@ export default class Database {
     private init(): void {
         if (!dbConfig.dialect) {
             throw new Error("The database dialect was not informed in the environment variables. [DATABASE_DIALECT]");
-        } else if (!dbConfig.username) {
+        }
+        
+        if (!dbConfig.username) {
             throw new Error("The database username was not informed in the environment variables. [DATABASE_USERNAME]");
-        } else if (!dbConfig.password) {
+        }
+        
+        if (!dbConfig.password) {
             throw new Error("The database password was not informed in the environment variables. [DATABASE_PASSWORD]");
-        } else if (!dbConfig.host) {
+        }
+        
+        if (!dbConfig.host) {
             throw new Error("The database host was not informed in the environment variables. [DATABASE_HOST]");
-        } else if (!dbConfig.port) {
+        }
+        
+        if (!dbConfig.port) {
             throw new Error("The database port was not informed in the environment variables. [DATABASE_PORT]");
-        } else if (!dbConfig.database) {
+        }
+        
+        if (!dbConfig.database) {
             throw new Error("The database name was not informed in the environment variables. [DATABASE_NAME]");
         }
+        
         this.connection = new Sequelize(dbConfig);
         this.connection.authenticate().then(() => {
             console.log("Connection to the database was successful");
